@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Katalog Kuliner</title>
+<style>
+  body{
+    font-family:sans-serif;
+    margin:0;
+    padding:0;
+    background:url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+    background-size:cover;
+  }
+  header{
+    background:#ff7043;
+    color:white;
+    padding:10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  header img{height:40px;margin-right:10px;border-radius:50%;}
+  header h1{margin:0;font-size:20px;}
+  .container{padding:15px;}
+  .filter-bar{margin-bottom:15px;}
+  .filter-btn{
+    background:#ff7043;color:white;
+    padding:6px 12px;margin:3px;
+    border:none;border-radius:20px;
+    cursor:pointer;font-size:14px;
+  }
+  .filter-btn.active{background:#d84315;}
+  .category-title{
+    margin-top:20px;font-size:18px;font-weight:bold;
+    color:#333;border-bottom:2px solid #ff7043;
+  }
+  .product{
+    background:white;padding:10px;margin:10px 0;
+    border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  }
+  .product img{
+    width:100%;max-height:200px;
+    object-fit:cover;border-radius:10px;cursor:pointer;
+  }
+  .product h3{margin:5px 0;}
+  .btn{
+    background:#ff7043;color:white;
+    padding:6px 10px;border:none;border-radius:5px;
+    cursor:pointer;text-decoration:none;display:inline-block;
+    margin:2px;font-size:14px;
+  }
+  .btn:hover{background:#e64a19;}
+  .btn-danger{background:#d32f2f;}
+  .btn-danger:hover{background:#b71c1c;}
+  .btn-secondary{background:#1976d2;}
+  .btn-secondary:hover{background:#0d47a1;}
+  #imgPopup{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.8);display:none;
+    align-items:center;justify-content:center;z-index:999;
+  }
+  #imgPopup img{
+    max-width:90%;max-height:90%;
+    border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.5);
+  }
+  #imgPopup .close-btn{
+    position:absolute;top:20px;right:20px;
+    font-size:24px;color:white;cursor:pointer;
+    background:rgba(0,0,0,0.5);border-radius:50%;
+    padding:5px 10px;
+  }
+  .fade{animation:fadeIn 0.5s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;">
+    <img id="storeLogo" src="" alt="Logo" style="display:none;">
+    <h1 id="storeTitle">Warung Kita</h1>
+  </div>
+  <button class="btn" onclick="showAdmin()">Admin</button>
+</header>
+
+<div id="buyerMode" class="container fade"></div>
+
+<div id="adminMode" class="container" style="display:none;">
+  <h2>Admin Panel</h2>
+  <label>Nama Toko: <input id="storeName"></label><br><br>
+  <label>No. WA: <input id="storeWA"></label><br><br>
+  <label>Alamat: <input id="storeAddressInput"></label><br><br>
+  <label>Logo: <input type="file" id="storeLogoInput" accept="image/*"></label><br><br>
+  <label>Password Admin: <input type="password" id="storePass"></label><br><br>
+  <button class="btn" onclick="saveSettings()">Simpan Pengaturan</button>
+  <hr>
+  <h3 id="formTitle">Tambah Produk</h3>
+  <label>Nama: <input id="prodName"></label><br><br>
+  <label>Harga: <input id="prodPrice"></label><br><br>
+  <label>Status: 
+    <select id="prodStatus">
+      <option value="Ready">Ready</option>
+      <option value="Habis">Habis</option>
+    </select>
+  </label><br><br>
+  <label>Kategori: <input id="prodCategory" placeholder="misal: Nasi, Minuman, Snack"></label><br><br>
+  <label>Gambar: <input type="file" id="prodImg" accept="image/*"></label><br><br>
+  <button class="btn" id="prodBtn" onclick="addProduct()">Tambah</button>
+  <hr>
+  <h3>Daftar Produk</h3>
+  <div id="adminProducts"></div>
+  <hr>
+  <button class="btn" onclick="showBuyer()">← Kembali ke Katalog</button>
+  <hr>
+  <button class="btn btn-danger" onclick="resetData()">🔄 Reset Data</button>
+</div>
+
+<div id="imgPopup" onclick="closePopup(event)">
+  <span class="close-btn" onclick="closePopup(event)">✖</span>
+  <img id="popupImg" src="">
+</div>
+
+<script>
+let settings={toko:"Warung Kita",wa:"",alamat:"",logo:"",pass:"1234"};
+let products=[
+  // 🍚 Nasi Goreng
+  {name:"Nasi Goreng Biasa",price:10000,status:"Ready",category:"Nasi Goreng",img:"https://via.placeholder.com/400x200?text=Nasi+Goreng+Biasa"},
+  {name:"Nasi Goreng Spesial",price:15000,status:"Ready",category:"Nasi Goreng",img:"https://via.placeholder.com/400x200?text=Nasi+Goreng+Spesial"},
+  {name:"Nasi Goreng Seafood",price:18000,status:"Habis",category:"Nasi Goreng",img:"https://via.placeholder.com/400x200?text=Nasi+Goreng+Seafood"},
+
+  // 🍜 Mie Goreng
+  {name:"Mie Goreng Biasa",price:9000,status:"Ready",category:"Mie Goreng",img:"https://via.placeholder.com/400x200?text=Mie+Goreng+Biasa"},
+  {name:"Mie Goreng Spesial",price:14000,status:"Ready",category:"Mie Goreng",img:"https://via.placeholder.com/400x200?text=Mie+Goreng+Spesial"},
+  {name:"Mie Goreng Jawa",price:16000,status:"Ready",category:"Mie Goreng",img:"https://via.placeholder.com/400x200?text=Mie+Goreng+Jawa"},
+
+  // 🥤 Es Teh
+  {name:"Es Teh Manis",price:4000,status:"Ready",category:"Minuman",img:"https://via.placeholder.com/400x200?text=Es+Teh+Manis"},
+  {name:"Es Teh Tawar",price:3000,status:"Ready",category:"Minuman",img:"https://via.placeholder.com/400x200?text=Es+Teh+Tawar"},
+  {name:"Es Teh Jumbo",price:6000,status:"Habis",category:"Minuman",img:"https://via.placeholder.com/400x200?text=Es+Teh+Jumbo"}
+];
+let editIndex=-1;
+let currentFilter="Semua";
+
+if(localStorage.getItem("settings")) settings=JSON.parse(localStorage.getItem("settings"));
+if(localStorage.getItem("products")) products=JSON.parse(localStorage.getItem("products"));
+
+function saveToLocal(){
+  localStorage.setItem("settings",JSON.stringify(settings));
+  localStorage.setItem("products",JSON.stringify(products));
+}
+
+function renderProducts(){
+  const buyer=document.getElementById("buyerMode");
+  buyer.innerHTML="";
+  let categories=[...new Set(products.map(p=>p.category))];
+  buyer.innerHTML+=`<div class="filter-bar">
+    <button class="filter-btn ${currentFilter==='Semua'?'active':''}" onclick="setFilter('Semua')">Semua</button>
+    ${categories.map(cat=>`<button class="filter-btn ${currentFilter===cat?'active':''}" onclick="setFilter('${cat}')">${cat}</button>`).join("")}
+  </div>`;
+  const grouped={};
+  products.forEach(p=>{
+    if(currentFilter!=="Semua" && p.category!==currentFilter) return;
+    if(!grouped[p.category]) grouped[p.category]=[];
+    grouped[p.category].push(p);
+  });
+  Object.keys(grouped).forEach(cat=>{
+    buyer.innerHTML+=`<div class="category-title">${cat}</div>`;
+    grouped[cat].forEach(p=>{
+      buyer.innerHTML+=`
+        <div class="product">
+          <img src="${p.img}" onclick="openPopup('${p.img}')">
+          <h3>${p.name}</h3>
+          <p>Harga: Rp${p.price}</p>
+          <p>Status: ${p.status}</p>
+          <a class="btn" href="https://wa.me/${settings.wa}?text=Saya ingin pesan ${p.name}" target="_blank">Pesan via WA</a>
+        </div>`;
+    });
+  });
+}
+function setFilter(cat){currentFilter=cat;renderProducts();}
+function renderAdminProducts(){
+  const adminList=document.getElementById("adminProducts");
+  adminList.innerHTML="";
+  products.forEach((p,i)=>{
+    adminList.innerHTML+=`
+      <div class="product">
+        <img src="${p.img}">
+        <h3>${p.name}</h3>
+        <p>Harga: Rp${p.price}</p>
+        <p>Status: ${p.status}</p>
+        <p>Kategori: ${p.category}</p>
+        <button class="btn btn-secondary" onclick="editProduct(${i})">✏ Edit</button>
+        <button class="btn btn-danger" onclick="deleteProduct(${i})">🗑 Hapus</button>
+      </div>`;
+  });
+}
+function showAdmin(){
+  const pass=prompt("Masukkan password admin:");
+  if(pass!==(settings.pass||"1234")){alert("Password salah!");return;}
+  document.getElementById("buyerMode").style.display="none";
+  document.getElementById("adminMode").style.display="block";
+  document.getElementById("storeName").value=settings.toko;
+  document.getElementById("storeWA").value=settings.wa;
+  document.getElementById("storeAddressInput").value=settings.alamat;
+  document.getElementById("storePass").value=settings.pass||"1234";
+  renderAdminProducts();
+}
+function showBuyer(){
+  document.getElementById("adminMode").style.display="none";
+  document.getElementById("buyerMode").style.display="block";
+  renderProducts();
+}
+function saveSettings(){
+  settings.toko=document.getElementById("storeName").value;
+  settings.wa=document.getElementById("storeWA").value;
+  settings.alamat=document.getElementById("storeAddressInput").value;
+  settings.pass=document.getElementById("storePass").value||settings.pass||"1234";
+  const file=document.getElementById("storeLogoInput").files[0];
+  if(file){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      settings.logo=e.target.result;
+      document.getElementById("storeLogo").src=settings.logo;
+      document.getElementById("storeLogo").style.display="block";
+      saveToLocal();
+    };
+    reader.readAsDataURL(file);
+  }else{saveToLocal();}
+  document.getElementById("storeTitle").textContent=settings.toko;
+  alert("Pengaturan tersimpan!");
+}
+function addProduct(){
+  const name=document.getElementById("prodName").value;
+  const price=document.getElementById("prodPrice").value;
+  const status=document.getElementById("prodStatus").value;
+  const category=document.getElementById("prodCategory").value||"Lainnya";
+  const file=document.getElementById("prodImg").files[0];
+  if(!name||!price){alert("Lengkapi data!");return;}
+  if(editIndex===-1){
+    const reader=new FileReader();
+    if(file){
+      reader.onload=e=>{
+        products.push({name,price,status,category,img:e.target.result});
+        saveToLocal();renderAdminProducts();alert("Produk ditambahkan!");
+      };
+      reader.readAsDataURL(file);
+    }else{
+      products.push({name,price,status,category,img:"https://via.placeholder.com/400x200?text="+encodeURIComponent(name)});
+      saveToLocal();renderAdminProducts();alert("Produk ditambahkan!");
+    }
+  }else{
+    if(file){
+      const reader=new FileReader();
+      reader.onload=e=>{
+        products[editIndex]={name,price,status,category,img:e.target.result};
+        saveToLocal();renderAdminProducts();alert("Produk diupdate!");
+      };
+      reader.readAsDataURL(file);
+    }else{
+      products[editIndex]={name,price,status,category,img:products[editIndex].img};
+      saveToLocal();renderAdminProducts();alert("Produk diupdate!");
+    }
+    editIndex=-1;
+    document.getElementById("formTitle").textContent="Tambah Produk";
+    document.getElementById("prodBtn").textContent="Tambah";
+  }
+  document.getElementById("prodName").value="";
+  document.getElementById("prodPrice").value="";
+  document.getElementById("prodCategory").value="";
+  document.getElementById("prodImg").value="";
+}
+function editProduct(i){
+  const p=products[i];
+  document.getElementById("prodName").value=p.name;
+  document.getElementById("prodPrice").value=p.price;
+  document.getElementById("prodStatus").value=p.status;
+  document.getElementById("prodCategory").value=p.category;
+  editIndex=i;
+  document.getElementById("formTitle").textContent="Edit Produk";
+  document.getElementById("prodBtn").textContent="Update";
+}
+function deleteProduct(i){
+  if(confirm("Hapus produk ini?")){
+    products.splice(i,1);
+    saveToLocal();renderAdminProducts();alert("Produk dihapus!");
+  }
+}
+function openPopup(src){
+  document.getElementById("popupImg").src=src;
+  document.getElementById("imgPopup").style.display="flex";
+}
+function closePopup(e){
+  if(e.target.id==="popupImg") return;
+  document.getElementById("imgPopup").style.display="none";
+}
+function resetData(){
+  if(confirm("Yakin mau reset semua data?")){
+    localStorage.removeItem("settings");
+    localStorage.removeItem("products");
+    location.reload();
+  }
+}
+if(settings.logo){
+  document.getElementById("storeLogo").src=settings.logo;
+  document.getElementById("storeLogo").style.display="block";
+}
+document.getElementById("storeTitle").textContent=settings.toko;
+renderProducts();
+</script>
+</body>
+</html>
