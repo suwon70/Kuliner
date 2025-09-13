@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -18,15 +17,22 @@
   header{
     position:sticky;top:0;z-index:1000;
     background:var(--accent);color:#fff;padding:12px 10px;
-    display:flex;align-items:center;justify-content:center; /* Mengatur konten utama di tengah */
+    display:flex;align-items:center;
   }
   #headerLeft{
     display:flex;
     flex-direction:column;
-    text-align:center; /* Memusatkan teks di dalam kontainer */
   }
   #storeTitle{font-size:18px;font-weight:700}
-  #storeContact{font-size:12px;color:#4caf50;font-weight:600;}
+  #storeContact{
+    font-size:12px;
+    font-weight:600;
+    background:#fff;
+    color:#222;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 4px;
+  }
 
   /* Gaya untuk keranjang cepat */
   #cartContainer{
@@ -316,7 +322,7 @@
           <pre id="reportText" class="report-text"></pre>
           <div class="report-actions">
               <button onclick="copyReportText()" style="flex: 1; padding: 8px; border: none; border-radius: 6px; background: #ddd; cursor: pointer;">Salin Teks</button>
-              <button onclick="sendReportToWhatsApp()" style="flex: 1; padding: 8px; border: none; border-radius: 6px; background: #25D366; color: white; cursor: pointer;">Kirim ke WhatsApp</button>
+              <button onclick="sendReportToWhatsApp()" style="flex: 1; padding: 8: none; border-radius: 6px; background: #25D366; color: white; cursor: pointer;">Kirim ke WhatsApp</button>
           </div>
       </div>
   </div>
